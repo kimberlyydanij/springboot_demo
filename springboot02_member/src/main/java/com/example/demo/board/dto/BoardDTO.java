@@ -1,6 +1,6 @@
-package com.example.board.dto;
+package com.example.demo.board.dto;
 
-import java.util.Date;
+import java.sql.Date;
 
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
@@ -8,13 +8,13 @@ import org.springframework.web.multipart.MultipartFile;
 @Component
 public class BoardDTO {
 	private int num, readcount, ref, re_step, re_level;
-	private String writer, email, subject, passwd, content, ip;
+	private String writer, email, subject, content, ip;
 	private Date reg_date;
-
-	// board테이블의 파일첨부를 처리해주는 멤버변수
+	
+	//board테이블의 파일첨부를 처리해주는 멤버변수
 	private String upload;
-
-	// form 페이지에서 파일첨부를 받아 처리해주는 멤버변수
+	
+	//form페이지에서 파일첨부를 받아 처리해주는 멤버변수
 	private MultipartFile filename;
 	
 	public BoardDTO() {
@@ -85,14 +85,6 @@ public class BoardDTO {
 		this.subject = subject;
 	}
 
-	public String getPasswd() {
-		return passwd;
-	}
-
-	public void setPasswd(String passwd) {
-		this.passwd = passwd;
-	}
-
 	public String getContent() {
 		return content;
 	}
@@ -132,5 +124,7 @@ public class BoardDTO {
 	public void setFilename(MultipartFile filename) {
 		this.filename = filename;
 	}
-
-}// end class
+	
+	
+	
+}

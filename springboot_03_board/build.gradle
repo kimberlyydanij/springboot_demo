@@ -33,7 +33,7 @@ dependencies {
 	//jsp //tomcat 관련 dependency
 	//implementation 'org.apache.tomcat.embed:tomcat-embed-jasper'
 	
-	//oracle
+	//oracle : Version11
 	implementation 'com.oracle.database.jdbc:ojdbc6:11.2.0.4'
 	
 	//mybatis

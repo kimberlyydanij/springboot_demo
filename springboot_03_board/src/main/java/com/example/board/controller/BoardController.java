@@ -6,8 +6,8 @@ import java.io.IOException;
 import java.util.UUID;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.jsp.tagext.PageData;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.FileCopyUtils;
@@ -24,7 +24,11 @@ import com.example.board.service.BoardService;
 
 @Controller
 public class BoardController {
+	
+	@Autowired
 	private BoardService service;
+	
+	@Autowired
 	private PageDTO pdto;
 	int currentPage;
 	

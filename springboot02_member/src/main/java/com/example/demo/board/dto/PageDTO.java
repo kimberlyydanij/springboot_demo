@@ -1,4 +1,4 @@
-package com.example.board.dto;
+package com.example.demo.board.dto;
 
 import org.springframework.stereotype.Component;
 
