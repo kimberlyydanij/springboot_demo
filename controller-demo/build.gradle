@@ -25,6 +25,11 @@ dependencies {
 	
 	//jsp //tomcat 관련 dependency
 	implementation 'org.apache.tomcat.embed:tomcat-embed-jasper'
+	
+	// https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-security
+    implementation 'org.springframework.boot:spring-boot-starter-security:2.7.8'
+	
+	
 }
 
 tasks.named('test') {
