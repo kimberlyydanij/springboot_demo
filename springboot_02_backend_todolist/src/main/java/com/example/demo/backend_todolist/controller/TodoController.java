@@ -11,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -26,7 +27,9 @@ import com.example.demo.backend_todolist.service.TodoService;
 
 //http://localhost:8090/todo/all
 
+@CrossOrigin("*")
 //@RestController = @Controller + @ResponseBody
+//@CrossOrigin(origins = {"http://localhost:3000"})
 @RestController
 //@Controller
 public class TodoController {
@@ -86,7 +89,7 @@ public class TodoController {
 		
 	} // end putTodo()
 	
-	// http://localhostL:8090/todo/1
+	// http://localhostL:8090/todo
 	@DeleteMapping("/todo/{id}")
 	public void deleteTodo(@PathVariable("id") int id) throws Exception {
 		System.out.println("id"+id);

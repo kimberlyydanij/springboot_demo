@@ -3,202 +3,187 @@ package com.example.board.controller;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Controller;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.util.FileCopyUtils;
-import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.ModelAndView;
+import org.springframework.beans.factory.annotation.Value;
 
 import com.example.board.dto.BoardDTO;
 import com.example.board.dto.PageDTO;
 import com.example.board.service.BoardService;
 
-
-@Controller
+// http://localhost:8090/board/list
+@RestController
 public class BoardController {
-	
-	@Autowired
-	private BoardService service;
-	
-	@Autowired
-	private PageDTO pdto;
-	int currentPage;
-	
 
-	public BoardController() {
+   @Autowired
+   private BoardService service;
+   
+   @Autowired
+   private PageDTO pdto;
+   
+   private int currentPage ;
+   
+   @Value("${spring.servlet.multipart.location}")
+   private String filePath;
 
-	}
+   public BoardController() {
 
-	public void setService(BoardService service) {
-		this.service = service;
-	}
+   }
 
-	public String filePath(HttpServletRequest request) {
-		String root = request.getSession().getServletContext().getRealPath("/");
-		String saveDirectory = root + "temp" + File.separator;
-		return saveDirectory;
-	}
-	
-	@RequestMapping("/list.do")	
-	public ModelAndView listMethod(PageDTO pv, ModelAndView mav) {
-	 	int totalRecord = service.countProcess(pv);
-		
-            //System.out.println("totalRecord:" + totalRecord);
-		if (totalRecord >= 1) {
-			if (pv.getCurrentPage() == 0)
-				currentPage = 1;
-			else
-				currentPage = pv.getCurrentPage();
+   public void setService(BoardService service) {
+      this.service = service;
+   }
 
-			pdto = new PageDTO(currentPage, totalRecord, pv.getSearchKey(), pv.getSearchWord() );
-			mav.addObject("pv", pdto);
-			mav.addObject("aList", service.listProcess(pdto));
-			
-		}
+   @RequestMapping("/board/list/{currentPage}")
+   public Map<String, Object> listMethod(@PathVariable("currentPage") int currentPage,PageDTO pv) {
+      Map<String, Object> map = new HashMap<>();
+      System.out.println("currentPage: " + currentPage);
+      int totalRecord = service.countProcess();
+      if (totalRecord >= 1) {
+         if (pv.getCurrentPage() == 0)
+            this.currentPage = 1;
+         else
+            this.currentPage = pv.getCurrentPage();
 
-		mav.setViewName("board/list");
-		return mav;
-	}// end listMethod()///////////////////////////
+         this.pdto = new PageDTO(this.currentPage, totalRecord);
+         List<BoardDTO> aList = service.listProcess(this.pdto);
+//         mav.addObject("aList", aList);
+//         mav.addObject("pv", this.pdto);
+         System.out.println(aList);
+         map.put("aList", aList);
+         map.put("pv", this.pdto);
+      }
 
-	@RequestMapping("/view.do")
-	public ModelAndView viewMethod(PageDTO pv , int num, ModelAndView mav) {
-		mav.addObject("dto", service.contentProcess(num));
-		//mav.addObject("currentPage", pv.getCurrentPage());
-		mav.setViewName("board/view");
-		return mav;
-	}// end viewMethod()///////////////////////////////
+//      mav.setViewName("board/list");
+//      return mav;
+      System.out.println(map.get("aList"));
+      return map;
+   }// end listMethod()
 
-	@RequestMapping(value = "/write.do", method = RequestMethod.GET)
-	public ModelAndView writeMethod(PageDTO pv, BoardDTO dto, ModelAndView mav) {
-		if (dto.getRef() != 0) { // 답변글이면
-			mav.addObject("currentPage", pv.getCurrentPage());
-			mav.addObject("dto", dto);
-		}
-		mav.setViewName("board/write");
-		return mav;
-	}// end writeMethod()/////////////////////
+   @RequestMapping(value = "/board/write", method = RequestMethod.GET)
+   public ModelAndView writeMethod(BoardDTO dto, PageDTO pv, ModelAndView mav) {
+      if (dto.getRef() != 0) { // 답변글이면
+         mav.addObject("currentPage", pv.getCurrentPage());
+         mav.addObject("dto", dto);
+      }
+      mav.setViewName("board/write");
+      return mav;
+   }// end writeMethod()
+   
+   //@Requestbody : json => 자바객체
+   //@Responsebody : 자바객체 > json
+   //@PathVariable : /board/list/num => board/list/1 => board/list/{num}
+   //@RequestParam : board/list?name=value => /board/list?num=1
+   //multipart/form-data : @requestBody 선언 없이 그냥 받음 BoardDTO dto
 
-	@RequestMapping(value = "/write.do", method = RequestMethod.POST)
-	public ModelAndView writeProMethod(PageDTO pv, BoardDTO dto, HttpServletRequest request, ModelAndView mav) {
+   @RequestMapping(value = "/board/write", method = RequestMethod.POST)
+   public String writeProMethod(BoardDTO dto,  PageDTO pv, HttpServletRequest request) throws IllegalStateException , IOException{
+      MultipartFile file = dto.getFilename();
+      if(file !=null && !file.isEmpty()) {
+          UUID random = saveCopyFile(file, request);
+          dto.setUpload(random + "_" + file.getOriginalFilename());
+          // d:\\download\\temp 경로에 첨부파일 저장
+          file.transferTo(new File(file.getOriginalFilename()));
+      }
 
-		MultipartFile file = dto.getFilename();
-		if (!file.isEmpty()) {
-			UUID random = saveCopyFile(file, request);
-			dto.setUpload(random + "_" + file.getOriginalFilename());
-		}
+      dto.setIp(request.getRemoteAddr());   
 
-		dto.setIp(request.getRemoteAddr());
+      service.insertProcess(dto);
 
-		// 답변글이면
-		if (dto.getRef() != 0) {
-			service.reStepProcess(dto);
-		} else {
-			// 제목글이면
-			service.insertProcess(dto);
-		}
-		
-		mav.addObject("currentPage",pv.getCurrentPage());
-	    mav.setViewName("redirect:/list.do");
-		return mav;
-	}// end writeProMethod()/////////////////
+      // 답변글이면
+      if (dto.getRef() != 0) {
+         return "redirect:/board/list/" + pv.getCurrentPage();
+      } else { // 제목글
+         return "redirect:/board/list/1";
+      }
+   }// end writeProMethod()
+   
+   
+   @RequestMapping(value="/board/update/{num}", method=RequestMethod.GET)
+   public BoardDTO updateMethod(@PathVariable("num") int num) {
+      return service.updateSelectProcess(num);
+   }//end updateMethod()
+   
+   @RequestMapping(value="/board/update", method=RequestMethod.PUT)
+   public void updateProMethod(@RequestBody BoardDTO dto, HttpServletRequest request) {
+      System.out.printf("num: %d, writer: %s\n", dto.getNum(), dto.getWriter());
+      MultipartFile file = dto.getFilename();
+      if(file !=null && !file.isEmpty()) {
+         UUID random = saveCopyFile(file, request);
+         dto.setUpload(random + "_" + file.getOriginalFilename());
+      }
+      
+      service.updateProcess(dto, urlPath(request));
+   }//end updateProMethod
+   
+   
+   @RequestMapping(value="/board/delete/{num}", method=RequestMethod.DELETE)
+   public void deleteMethod(@PathVariable("num")  int  num,  HttpServletRequest request) {
+      service.deleteProcess(num, urlPath(request));
+      
+     // int totalRecord = service.countProcess();
+     // this.pdto = new PageDTO(this.currentPage, totalRecord);
 
-	public UUID saveCopyFile(MultipartFile file, HttpServletRequest request) {
-		String fileName = file.getOriginalFilename();
-		// 중복파일명을 처리하기 위해 난수 발생
-		UUID random = UUID.randomUUID();
-		String saveDirectory = filePath(request);
-		System.out.println(saveDirectory);
-		File fe = new File(saveDirectory);
-		if (!fe.exists()) {
-			fe.mkdir();
-		}
+   }//end deleteMethod()
+   
+   
 
-		File ff = new File(saveDirectory, random + "_" + fileName);
-		try {
-			FileCopyUtils.copy(file.getInputStream(), new FileOutputStream(ff));
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+   private UUID saveCopyFile(MultipartFile file, HttpServletRequest request) {
+      String fileName = file.getOriginalFilename();
 
-		return random;
-	}// end saveCopyFile()/////////////////
+      // 중복파일명을 처리하기 위해 난수 발생
+      UUID random = UUID.randomUUID();
 
-	@RequestMapping("/contentdownload.do")
-	public ModelAndView downMethod(int num, ModelAndView mav) {
-		mav.addObject("num", num);
-		mav.setViewName("download");
-		return mav;
-	}// end downMethod()////////////////////////
+      File fe = new File(urlPath(request));
+      if (!fe.exists()) {
+         fe.mkdir();
+      }
 
-	@RequestMapping(value = "/update.do", method = RequestMethod.GET)
-	public ModelAndView updateMethod(int num, int currentPage, ModelAndView mav) {
-		mav.addObject("dto", service.updateSelectProcess(num));
-		mav.addObject("currentPage", currentPage);
-		mav.setViewName("board/update");
-		return mav;
-	}// end updateMethod()//////////////////////
+      File ff = new File(urlPath(request), random + "_" + fileName);
 
-	
-	@RequestMapping(value = "/update.do", method = RequestMethod.POST)
-	public ModelAndView updateProMethod(BoardDTO dto, int currentPage, HttpServletRequest request, ModelAndView mav) {
-		//기존 첨부파일
-		String filename = service.fileSelectprocess(dto.getNum());
-		String saveDirectory = filePath(request);
-				
-		//수정할 첨부파일
-		MultipartFile file = dto.getFilename();
-		//수정 첨부파일이 있으면
-		if (!file.isEmpty()) {
-			//기존 첨부파일이 있으면
-			if(filename !=null) {
-				File fe = new File(saveDirectory, filename);
-				fe.delete();						
-			}
-			
-			UUID random = saveCopyFile(file, request);
-			dto.setUpload(random + "_" + file.getOriginalFilename());
-		}
+      try {
+         FileCopyUtils.copy(file.getInputStream(), new FileOutputStream(ff));
+      } catch (IOException e) {
+         // TODO Auto-generated catch block
+         e.printStackTrace();
+      }
 
-		dto.setIp(request.getRemoteAddr());		
-		service.updateProcess(dto);
-		mav.addObject("currentPage", currentPage);
-		mav.setViewName("redirect:/list.do");		
-		return mav;
-	}
-	
-	@RequestMapping("/delete.do")
-	public ModelAndView deleteMethod(int num, 
-			PageDTO pv, HttpServletRequest request,
-			ModelAndView mav) {
-		
-		String upload = service.fileSelectprocess(num);
-		//첨부파일이 저장되여 있으면
-		if(upload != null) {
-			String saveDirectory = filePath(request);
-			File fe = new File(saveDirectory, upload);
-			fe.delete();			
-		}
-		
-		service.deleteProcess(num);
-		PageDTO pdto = new PageDTO(pv.getCurrentPage(), service.countProcess(pv));
-		if(pdto.getTotalPage()<pv.getCurrentPage())
-			mav.addObject("currentPage", pdto.getTotalPage());
-		else						
-		   mav.addObject("currentPage", pv.getCurrentPage());
-		
-		mav.setViewName("redirect:/list.do");		
-		return mav;
-	}
+      return random;
+   }// end saveCopyFile()
+
+   private String urlPath(HttpServletRequest request) {
+      String root = request.getSession().getServletContext().getRealPath("/");
+      // D:\big_study\spring_workspace\.metadata\.plugins\org.eclipse.wst.server.core\tmp0\wtpwebapps\spring_08_board
+      System.out.println("root:" + root);
+      String saveDirectory = root + "temp" + File.separator;
+      return saveDirectory;
+   }// end urlPath()
+
+   @RequestMapping("/board/view/{num}")
+   public BoardDTO viewMethod(@PathVariable("num") int num) {
+      return service.contentProcess(num);
+   }// end viewMethod()
+
+   @RequestMapping("/board/contentdownload")
+   public ModelAndView downMethod(int num, ModelAndView mav) {
+      mav.addObject("num", num);
+      mav.setViewName("download");
+      return mav;
+   }// end downMethod()
+
 }// end class
-
-
-
-

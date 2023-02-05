@@ -44,9 +44,9 @@
 		WHERE ref=#{ref} AND re_step>#{re_step}
 	</update>
 	<update id="update" parameterType="BoardDTO">
-		UPDATE board SET subject=#{subject}, email=#{email},
-		content=#{content}
-		<if test="upload!=null"> , upload=#{upload}
+		UPDATE board SET subject=#{subject}, email=#{email, jdbcType=VARCHAR},
+		content=#{content, jdbcType=VARCHAR}
+		<if test="upload!=null"> , upload=#{upload, jdbcType=VARCHAR}
 		</if>
 		WHERE num=#{num}
 	</update>
