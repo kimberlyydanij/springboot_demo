@@ -13,6 +13,7 @@ import javax.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.util.FileCopyUtils;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -26,6 +27,7 @@ import com.example.board.dto.BoardDTO;
 import com.example.board.dto.PageDTO;
 import com.example.board.service.BoardService;
 
+@CrossOrigin(origins = {"http://localhost:3000"})
 // http://localhost:8090/board/list
 @RestController
 public class BoardController {
@@ -107,7 +109,8 @@ public class BoardController {
 
       // 답변글이면
       if (dto.getRef() != 0) {
-         return "redirect:/board/list/" + pv.getCurrentPage();
+        // return "redirect:/board/list/" + pv.getCurrentPage();
+    	  return String.valueOf(pv.getCurrentPage());
       } else { // 제목글
          return "redirect:/board/list/1";
       }
