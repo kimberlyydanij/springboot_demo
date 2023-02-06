@@ -27,9 +27,10 @@ import com.example.demo.backend_todolist.service.TodoService;
 
 //http://localhost:8090/todo/all
 
-@CrossOrigin("*")
 //@RestController = @Controller + @ResponseBody
-//@CrossOrigin(origins = {"http://localhost:3000"})
+
+@CrossOrigin("*") //포트번호에 관계없이 응답을 허가해주는 어노테이션
+//@CrossOrigin(origins = {"http://localhost:3000"}) //특정 url에만 허가하는 방법
 @RestController
 //@Controller
 public class TodoController {
@@ -39,60 +40,55 @@ public class TodoController {
 	
 	public TodoController() {
 		System.out.println("controller");
-	}
+	}//end TodoController()
 	
-	//@ResponseBody
+	//http://localhost:8090/todo/all
+//	@ResponseBody
 	@GetMapping("/todo/all")
 	public List<TodoDTO> getList() throws Exception{
 		System.out.println("all"); 
 		return todoService.search();
-	}
+	}//end getList()
 	
-	//http://localhost:8090/todo
-//	@PostMapping("/todo")
-//	public void postTodo(@RequestBody TodoDTO dto) throws Exception{
-//		System.out.println(dto.getTodoname());
-//		todoService.insert(dto);
-//	}	
-	
-	
+	//http://loacalhost:8090/todo
 	@PostMapping("/todo")
-	public ResponseEntity<Object> postTodo(@RequestBody TodoDTO dto) throws Exception{
+	public ResponseEntity<Object> postTodo(@RequestBody TodoDTO dto) throws Exception {
 		System.out.println(dto.getTodoname());
 		int chk = todoService.insert(dto);
-			HttpHeaders header = new HttpHeaders();
-			header.setContentType(new MediaType("application", "json", Charset.forName("UTF-8")));
-			
-			HashMap<String, String> map = new HashMap<>();
-			map.put("createDate", new Date().toString());
-			map.put("message", "insert ok");
-			 
+		
+		//header 부분에 들어갈 정보 설정
+		HttpHeaders header = new HttpHeaders();
+		header.setContentType(new MediaType("application", "json", Charset.forName("UTF-8")));
+		
+		//body 부분에 들어갈 정보 설정
+		HashMap<String, String> map = new HashMap<>();
+		map.put("createDate", new Date().toString());
+		map.put("message", "insert ok");
+		
 		if(chk>=1) {
-			// ResponseEntity<Object>(body, headers, status);
-			//return new ResponseEntity<Object>(header, HttpStatus.OK);
-			//return new ResponseEntity<Object>(HttpStatus.OK);
+			//body, headers, status
+//			return new ResponseEntity<Object>(HttpStatus.OK);
+//			return new ResponseEntity<Object>(header, HttpStatus.OK);
 //			return new ResponseEntity<Object>(map, HttpStatus.OK);
 			return new ResponseEntity<Object>(map, header, HttpStatus.OK);
-			
-		} else 
+		}
+		else
 			return new ResponseEntity<Object>(HttpStatus.NOT_ACCEPTABLE);
-	} // end postTodo()
+	}//end postTodo()
 	
-	//todo?id=1&complete=0 pathvariable 사용 불가
-	@PutMapping("todo/{id}/{completed}")
+	//todo?id=1&completed=0 RequestParam
+	@PutMapping("/todo/{id}/{completed}") //PathVariable
 	public void putTodo(@PathVariable("id") int id, @PathVariable("completed") int completed) throws Exception{
 		System.out.printf("id=%d, completed=%d\n", id, completed);
 		TodoDTO dto = new TodoDTO();
 		dto.setId(id);
 		dto.setCompleted(completed==0 ? 1 : 0);
 		todoService.update(dto);
-		
-	} // end putTodo()
+	}//end putTodo()
 	
-	// http://localhostL:8090/todo
 	@DeleteMapping("/todo/{id}")
 	public void deleteTodo(@PathVariable("id") int id) throws Exception {
-		System.out.println("id"+id);
+		System.out.println("id:"+id);
 		todoService.delete(id);
-	}
-} // end class
+	}//end deleteTodo()
+}//end class
