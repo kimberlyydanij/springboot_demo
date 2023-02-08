@@ -8,10 +8,6 @@ group = 'com.example'
 version = '0.0.1-SNAPSHOT'
 sourceCompatibility = '11'
 
-
-
-
-
 repositories {
    // 원격 저장소 사용
 	mavenCentral()
@@ -25,6 +21,11 @@ dependencies {
 	implementation 'org.springframework.session:spring-session-core'
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	implementation 'org.springframework.boot:spring-boot-starter-security'
+    testImplementation 'org.springframework.security:spring-security-test'
+
+
+	
 	
 	//aop
 	implementation 'org.springframework.boot:spring-boot-starter-aop'
@@ -51,6 +52,9 @@ dependencies {
 	//implementation 'org.apache.tiles:tiles-core:3.0.8'
 	//implementation 'org.apache.tiles:tiles-api:3.0.8'
 	//implementation 'org.apache.tiles:tiles-el:3.0.8'
+	
+	//jwt
+	implementation 'com.auth0:java-jwt:4.0.0'
 	
 }
 
